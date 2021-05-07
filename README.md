@@ -1,0 +1,12 @@
+# 숭실대 온라인 강의 손가락 까닥 안하고 이어 듣기
+
+매번 강의 끝날때마다 마우스 움직이는게 귀찮아서 만들었습니다. 절대 밤에 틀어놓고 잘려고 하는 목적이 아니니 오해는 삼가 해주세요 ^^~
+
+```bash
+git clone https://github.com/minuukang/ssu-online-lecture-autoplay
+cd ssu-online-lecture-autoplay
+npm i
+npm start
+```
+
+매번 아이디 비밀번호 치는게 귀찮다면 `.env.example` 파일을 `.env` 로 복사해서 `SSU_ID` 와 `SSU_PASSWORD` 필드를 채워넣으세요
