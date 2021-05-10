@@ -12,6 +12,10 @@ export default async function getCourseActiveLectures (context: BrowserContext, 
       const $element = $(element);
       const period = $element.find('.text-ubstrap').text().trim().split(' ~ ');
       const length = $element.find('.text-info').text().trim().replace(/^,\s*/, '');
+      const $anchor = $element.find('a');
+      if (!$anchor.length) {
+        return null;
+      }
       return {
         id: $element.find('a').attr('onclick').match(/\?i=(.*?)\'/)?.[1],
         title: $element.find('.instancename').text().trim().replace(/\s*Commons$/, ''),
@@ -19,6 +23,6 @@ export default async function getCourseActiveLectures (context: BrowserContext, 
         endDate: new Date(period[1]),
         length
       };
-    });
+    }).filter((v): v is NonNullable<typeof v> => Boolean(v));
   });
 }
