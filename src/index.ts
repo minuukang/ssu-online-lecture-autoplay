@@ -14,7 +14,9 @@ dotenv.config();
 prompt.start();
 
 async function main () {
-  const browser = await playwright.firefox.launch();
+  const browser = await playwright.firefox.launch({
+    headless: !process.env.DO_AT_BACKGROUND
+  });
   const context = await browser.newContext({
     locale: 'ko-KR',
     extraHTTPHeaders: {
