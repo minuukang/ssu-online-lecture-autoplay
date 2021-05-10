@@ -13,4 +13,4 @@ npm start
 
 매번 아이디 비밀번호 치는게 귀찮다면 `.env.example` 파일을 `.env` 로 복사해서 `SSU_ID` 와 `SSU_PASSWORD` 필드를 채워넣으세요
 
-(있을지 모르겠지만!) 동영상 재생을 백그라운드에서 하고 싶다면 `.env` 에서 `DO_AT_BACKGROUND` 옵션을 채워놓으세요. 브라우저를 headless로 전환합니다.
+(있을지 모르겠지만!) 동영상 재생을 백그라운드에서 하고 싶다면 `.env` 에서 `PLAY_BACKGROUND` 옵션을 채워놓으세요. 브라우저를 headless로 전환합니다.

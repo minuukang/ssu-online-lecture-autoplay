@@ -15,7 +15,7 @@ prompt.start();
 
 async function main () {
   const browser = await playwright.firefox.launch({
-    headless: !process.env.DO_AT_BACKGROUND
+    headless: !!process.env.PLAY_BACKGROUND
   });
   const context = await browser.newContext({
     locale: 'ko-KR',
