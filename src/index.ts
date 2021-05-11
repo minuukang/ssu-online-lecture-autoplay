@@ -77,11 +77,11 @@ async function main () {
         hideCursor: true,
       }, Presets.rect);
 
-      for (const lecture of lectures.map(lecture => ({
+      for (const lecture of lectures.map((lecture, index) => ({
         ...lecture,
         progress: mainProgress.create(formatToTime(lecture.length), 0, {
           emoji: '⏳',
-          index: lectures.indexOf(lecture) + 1,
+          index: index + 1,
           course: courses.find(c => c.id === lecture.courseId)?.title,
           lecture: lecture.title,
           status: 'Waiting...'
