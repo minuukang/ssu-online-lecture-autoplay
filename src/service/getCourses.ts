@@ -7,7 +7,7 @@ export default async function getCourses (context: BrowserContext) {
       const $element = $(element);
       return {
         id: $element.attr('href').match(/id=(.*?)$/)?.[1],
-        title: $element.text().trim()
+        title: $element.text().replace(/\(.*?\)/g, '').trim()
       };
     });
   });

@@ -17,6 +17,7 @@ export default async function getCourseActiveLectures (context: BrowserContext, 
         return null;
       }
       return {
+        courseId,
         id: $element.find('a').attr('onclick').match(/\?i=(.*?)\'/)?.[1],
         title: $element.find('.instancename').text().trim().replace(/\s*Commons$/, ''),
         startDate: new Date(period[0]),
