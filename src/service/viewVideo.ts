@@ -21,7 +21,7 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
     await muteButton.click();
   }
   newPage.on('dialog', async (dialog) => {
-    await dialog.dismiss();
+    await dialog.accept();
   });
   newPage.on('console', async message => {
     if (message.args().length && message.text() === 'JSHandle@object') {
@@ -34,21 +34,46 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
     }
   });
   await secondFrame.evaluate(() => {
-    return new Promise<void>((resolve) => {
-      let videoEnded = 0;
-      const medias = Array.from(document.querySelectorAll<HTMLMediaElement>('video, audio'));
-      medias.forEach(media => {
-        media.addEventListener('ended', () => {
-          if (videoEnded++ === 0) {
-            console.log({ type: 'intro' });
-          } else {
+    return new Promise<void>(resolve => {
+      try {
+        // Check intro is pass from playProgress should move
+        const introMutation = new MutationObserver(() => {
+          console.log({ type: 'intro' });
+          introMutation.disconnect();
+        });
+        introMutation.observe(document.querySelector('.vc-pctrl-play-progress'), {
+          attributes: true
+        });
+        // Check currentTime from seek thumb style mutation
+        let prevCurrentTime = 0;
+        const currentTimeEl = document.querySelector('.vc-pctrl-curr-time');
+        const progressMutation = new MutationObserver(() => {
+          const currentTimeText = currentTimeEl.textContent;
+          const currentTime = currentTimeText.split(':').map(Number).reverse().reduce((result, value, index) => {
+            return result + (value * Math.pow(60, index));
+          }, 0);
+          if (prevCurrentTime !== currentTime) {
+            console.log({
+              type: 'timeupdate',
+              currentTime: currentTime
+            });
+          }
+          prevCurrentTime = currentTime;
+        });
+        progressMutation.observe(document.querySelector('.vc-pctrl-seek-thumb'), {
+          attributes: true
+        });
+        // Check resolve from retry screen is opened
+        const retryContainer = document.querySelector('#player-center-control') as HTMLDivElement;
+        const retryMutation = new MutationObserver(() => {
+          if (retryContainer.style.display && retryContainer.style.display !== 'none') {
             resolve();
           }
         });
-        media.addEventListener('timeupdate', e => {
-          console.log({ type: 'timeupdate', currentTime: media.currentTime });
+        retryMutation.observe(retryContainer, {
+          attributes: true
         });
-      })
+      } catch (err) {}
     })
   })
   await newPage.close();
