@@ -3,10 +3,11 @@ import { BrowserContext } from 'playwright';
 type Props = {
   lectureId: string;
   timeLength: string;
+  onConsole?(event: { type: string; }): void;
 };
 
 export default async function viewVideo (context: BrowserContext, props: Props) {
-  const { lectureId, timeLength } = props;
+  const { lectureId, timeLength, onConsole } = props;
   const newPage = await context.newPage();
   await newPage.goto(`http://myclass.ssu.ac.kr/mod/xncommons/viewer.php?i=${lectureId}`);
   await newPage.waitForSelector('#vod_viewer iframe');
@@ -24,14 +25,27 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
     console.log(dialog.message());
     await dialog.accept();
   });
+  newPage.on('console', async message => {
+    if (message.args().length) {
+      const event = await message.args()[0].jsonValue();
+      if (typeof event === 'object' && 'type' in event) {
+        onConsole?.(event);
+      }
+    }
+  });
   let timer: NodeJS.Timeout;
   await Promise.race([
     // 첫번째 인트로 영상 넘기고 두번째 본영상 끝날때까지 대기하거나
     secondFrame.evaluate(() => {
       return new Promise<void>((resolve) => {
         let videoEnded = 0;
-        document.querySelector('.vc-vplay-video1').addEventListener('ended', () => {
-          if (++videoEnded === 2) {
+        const video = document.querySelector('.vc-vplay-video1') as HTMLVideoElement;
+        video.addEventListener('timeupdate', () => {
+          console.log({ type: 'timeupdate', currentTime: video.currentTime });
+        });
+        video.addEventListener('ended', () => {
+          console.log({ type: 'ended', videoEnded: ++videoEnded });
+          if (videoEnded === 2) {
             resolve();
           }
         });

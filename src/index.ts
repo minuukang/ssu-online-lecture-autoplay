@@ -2,6 +2,7 @@ import * as playwright from 'playwright';
 import * as dotenv from 'dotenv';
 import * as prompt from 'prompt';
 import * as alert from 'alert';
+import { SingleBar, Presets } from 'cli-progress';
 
 // services
 import authentication from './service/authentication';
@@ -9,11 +10,13 @@ import getCourseActiveLectures from './service/getCourseActiveLectures';
 import getCourseUncompleteLectures from './service/getCourseUncompleteLectures';
 import getCourses from './service/getCourses';
 import viewVideo from './service/viewVideo';
+import { formatToTime, timeFormat } from './helpers/timeFormat';
 
 dotenv.config();
 prompt.start();
 
 async function main () {
+  console.log('🚀 온라인 강의 자동 이어듣기 시작!\n');
   const browser = await playwright.firefox.launch({
     headless: !!process.env.PLAY_BACKGROUND
   });
@@ -25,19 +28,23 @@ async function main () {
   });
   try {
     // authencaition
-    const login = {
+    let login = {
       id: process.env.SSU_ID,
       password: process.env.SSU_PASSWORD
     };
 
-    await authentication(context, login.id && login.password ? login : await prompt.get([
-      { properties: { id: { message: 'http://myclass.ssu.ac.kr ID' } } },
-      { properties: { password: { message: 'http://myclass.ssu.ac.kr Password', hidden: true } as unknown } }
-    ]));
+    if (!(login.id && login.password)) {
+      console.log('📝 로그인 정보를 입력하세요.');
+      login = await prompt.get([
+        { properties: { id: { message: 'http://myclass.ssu.ac.kr ID' } } },
+        { properties: { password: { message: 'http://myclass.ssu.ac.kr Password', hidden: true } as unknown } }
+      ]);
+    }
+
+    await authentication(context, login);
 
     // get courses
     const courses = await getCourses(context);
-    console.log(`Your course [${courses.map(c => c.title).join(', ')}]`);
 
     // get uncomplete & active lectures
     const today = new Date();
@@ -56,20 +63,52 @@ async function main () {
       ];
     }, []);
 
-    console.log(`Uncomplete ${lectures.length} lectures.`);
+    console.log(`\n👀 총 ${lectures.length}개의 미수강 현재 주차 강의가 있습니다.\n`);
     if (lectures.length) {
-      console.log(`Lets play!`);
       // view videos
       for (const lecture of lectures) {
-        console.log(`View start [${lecture.title}] (${lecture.length})`);
+        const progressBar = new SingleBar({
+          format: `{emoji} {index}. | {bar} | {course} > {lecture} | {status}`,
+          hideCursor: true,
+        }, Presets.rect);
+
+        const totalTime = formatToTime(lecture.length);
+        const colonLength = lecture.length.split(':').length;
+        const renderStatus = (time: number) => `(${timeFormat(time, colonLength)} / ${lecture.length})`
+        progressBar.start(totalTime, 0, {
+          emoji: '⏳',
+          index: lectures.indexOf(lecture) + 1,
+          course: courses.find(c => c.id === lecture.courseId)?.title,
+          lecture: lecture.title,
+          status: 'Loading...'
+        });
+
         await viewVideo(context, {
           lectureId: lecture.id,
-          timeLength: lecture.length
+          timeLength: lecture.length,
+          onConsole(event: { type: 'ended'; videoEnded: number; } | { type: 'timeupdate'; currentTime: number; }) {
+            if (event.type === 'ended') {
+              if (event.videoEnded === 1) {
+                progressBar.update(0, {
+                  status: renderStatus(0)
+                });
+              }
+            } else if (event.type === 'timeupdate') {
+              progressBar.update(event.currentTime, {
+                status: renderStatus(event.currentTime),
+              });
+            }
+          }
         });
-        console.log(`View end [${lecture.title}]`);
+
+        progressBar.update(totalTime, {
+          emoji: '✅',
+          status: renderStatus(totalTime),
+        });
+        progressBar.stop();
       }
     }
-    console.log(`ByeBye!`);
+    console.log(`\n✋ 다음에 또 봐요!`);
   } catch (e) {
     alert(e.message);
   } finally {
