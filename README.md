@@ -11,6 +11,8 @@ npm i
 npm start
 ```
 
+![image](./.github/ezgif-7-b003a4bf0e8d.gif)
+
 자동으로 미수강 강의 중에서 현재 주차 강의를 찾아서 재생을 순차적으로 진행합니다.
 
 매번 아이디 비밀번호 치는게 귀찮다면 `.env.example` 파일을 `.env` 로 복사해서 `SSU_ID` 와 `SSU_PASSWORD` 필드를 채워넣으세요
