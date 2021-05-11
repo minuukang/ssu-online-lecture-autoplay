@@ -42,7 +42,8 @@ async function main () {
       ]);
     }
 
-    console.log('⏳ 로그인 중입니다 ...');
+    console.log('\n');
+    consoleRewrite('⏳ 로그인 중입니다 ...');
 
     await authentication(context, login);
 

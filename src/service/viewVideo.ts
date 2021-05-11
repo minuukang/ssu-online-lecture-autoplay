@@ -22,14 +22,16 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
     await muteButton.click();
   }
   newPage.on('dialog', async (dialog) => {
-    await dialog.accept();
+    await dialog.dismiss();
   });
   newPage.on('console', async message => {
     if (message.args().length && message.text() === 'JSHandle@object') {
-      const event = await message.args()[0].jsonValue();
-      if (typeof event === 'object' && 'type' in event) {
-        onConsole?.(event);
-      }
+      try {
+        const event = await message.args()[0].jsonValue();
+        if (typeof event === 'object' && 'type' in event) {
+          onConsole?.(event);
+        }
+      } catch {}
     }
   });
   let timer: NodeJS.Timeout;
