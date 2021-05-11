@@ -11,7 +11,7 @@ npm i
 npm start
 ```
 
-![image](./.github/ezgif-7-b003a4bf0e8d.gif)
+![image](./.github/ezgif-7-05614e2be852.gif)
 
 자동으로 미수강 강의 중에서 현재 주차 강의를 찾아서 재생을 순차적으로 진행합니다.
 
