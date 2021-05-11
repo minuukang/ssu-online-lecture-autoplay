@@ -70,8 +70,9 @@ async function main () {
     }, []);
 
     consoleRewrite(`👀 총 ${lectures.length}개의 미수강 현재 주차 강의가 있습니다.`);
-    console.log('\n\n');
     if (lectures.length) {
+      console.log('\n\n');
+
       const mainProgress = new MultiBar({
         format: `{emoji} {index}. | {bar} | {course} > {lecture} | {status}`,
         hideCursor: true,
