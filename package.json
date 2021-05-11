@@ -13,18 +13,12 @@
   },
   "author": "",
   "license": "ISC",
-  "pkg": {
-    "scripts": "build/**/*.js",
-    "targets": [ "node14-linux-arm64" ],
-    "outputPath": "dist"
-  },
   "dependencies": {
     "@types/cheerio": "^0.22.28",
     "@types/prompt": "^1.1.0",
     "alert": "^5.0.10",
     "cheerio": "^1.0.0-rc.6",
     "dotenv": "^9.0.0",
-    "pkg": "^5.1.0",
     "playwright": "^1.10.0",
     "prompt": "^1.1.0",
     "ts-node": "^9.1.1",
