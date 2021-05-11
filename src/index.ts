@@ -42,13 +42,10 @@ async function main () {
       ]);
     }
 
-    console.log('\n');
     consoleRewrite('⏳ 로그인 중입니다 ...');
 
     await authentication(context, login);
 
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
     consoleRewrite('⏳ 강의 정보를 불러오는 중입니다 ...');
 
     // get courses
@@ -98,7 +95,6 @@ async function main () {
         let playReady = false;
         await viewVideo(context, {
           lectureId: lecture.id,
-          timeLength: lecture.length,
           onConsole(event: { type: 'intro' } | { type: 'timeupdate'; currentTime: number; }) {
             if (event.type === 'intro') {
               playReady = true;
