@@ -2,7 +2,7 @@ import * as playwright from 'playwright';
 import * as dotenv from 'dotenv';
 import * as prompt from 'prompt';
 import * as alert from 'alert';
-import { SingleBar, Presets } from 'cli-progress';
+import { MultiBar, Presets } from 'cli-progress';
 
 // services
 import authentication from './service/authentication';
@@ -41,7 +41,14 @@ async function main () {
       ]);
     }
 
+    console.log('');
+    process.stdout.write('⏳ 로그인 중입니다 ...');
+
     await authentication(context, login);
+
+    process.stdout.clearLine(0);
+    process.stdout.cursorTo(0);
+    process.stdout.write('⏳ 강의 정보를 불러오는 중입니다 ...');
 
     // get courses
     const courses = await getCourses(context);
@@ -63,50 +70,58 @@ async function main () {
       ];
     }, []);
 
-    console.log(`\n👀 총 ${lectures.length}개의 미수강 현재 주차 강의가 있습니다.\n`);
+    process.stdout.clearLine(0);
+    process.stdout.cursorTo(0);
+    process.stdout.write(`👀 총 ${lectures.length}개의 미수강 현재 주차 강의가 있습니다.`);
+    console.log('\n');
     if (lectures.length) {
-      // view videos
-      for (const lecture of lectures) {
-        const progressBar = new SingleBar({
-          format: `{emoji} {index}. | {bar} | {course} > {lecture} | {status}`,
-          hideCursor: true,
-        }, Presets.rect);
+      const mainProgress = new MultiBar({
+        format: `{emoji} {index}. | {bar} | {course} > {lecture} | {status}`,
+        hideCursor: true,
+      }, Presets.rect);
 
-        const totalTime = formatToTime(lecture.length);
-        const colonLength = lecture.length.split(':').length;
-        const renderStatus = (time: number) => `(${timeFormat(time, colonLength)} / ${lecture.length})`
-        progressBar.start(totalTime, 0, {
+      for (const lecture of lectures.map(lecture => ({
+        ...lecture,
+        progress: mainProgress.create(formatToTime(lecture.length), 0, {
           emoji: '⏳',
           index: lectures.indexOf(lecture) + 1,
           course: courses.find(c => c.id === lecture.courseId)?.title,
           lecture: lecture.title,
+          status: 'Waiting...'
+        })
+      }))) {
+        const totalTime = lecture.progress.getTotal();
+        const colonLength = lecture.length.split(':').length;
+        const renderStatus = (time: number) => `(${timeFormat(time, colonLength)} / ${lecture.length})`;
+        lecture.progress.update(0, {
+          emoji: '🤤',
           status: 'Loading...'
         });
-
+        let playReady = false;
         await viewVideo(context, {
           lectureId: lecture.id,
           timeLength: lecture.length,
-          onConsole(event: { type: 'ended'; videoEnded: number; } | { type: 'timeupdate'; currentTime: number; }) {
-            if (event.type === 'ended') {
-              if (event.videoEnded === 1) {
-                progressBar.update(0, {
-                  status: renderStatus(0)
-                });
-              }
-            } else if (event.type === 'timeupdate') {
-              progressBar.update(event.currentTime, {
-                status: renderStatus(event.currentTime),
+          onConsole(event: { type: 'intro' } | { type: 'timeupdate'; currentTime: number; }) {
+            if (event.type === 'intro') {
+              playReady = true;
+              lecture.progress.update(0, {
+                emoji: '🏃‍',
+                status: renderStatus(0)
+              });
+            } else if (event.type === 'timeupdate' && playReady) {
+              lecture.progress.update(event.currentTime, {
+                status: renderStatus(Math.floor(event.currentTime)),
               });
             }
           }
         });
-
-        progressBar.update(totalTime, {
+        lecture.progress.update(totalTime, {
           emoji: '✅',
           status: renderStatus(totalTime),
         });
-        progressBar.stop();
+        lecture.progress.stop();
       }
+      mainProgress.stop();
     }
     console.log(`\n✋ 다음에 또 봐요!`);
   } catch (e) {

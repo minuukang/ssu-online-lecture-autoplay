@@ -22,11 +22,10 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
     await muteButton.click();
   }
   newPage.on('dialog', async (dialog) => {
-    console.log(dialog.message());
     await dialog.accept();
   });
   newPage.on('console', async message => {
-    if (message.args().length) {
+    if (message.args().length && message.text() === 'JSHandle@object') {
       const event = await message.args()[0].jsonValue();
       if (typeof event === 'object' && 'type' in event) {
         onConsole?.(event);
@@ -39,16 +38,19 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
     secondFrame.evaluate(() => {
       return new Promise<void>((resolve) => {
         let videoEnded = 0;
-        const video = document.querySelector('.vc-vplay-video1') as HTMLVideoElement;
-        video.addEventListener('timeupdate', () => {
-          console.log({ type: 'timeupdate', currentTime: video.currentTime });
-        });
-        video.addEventListener('ended', () => {
-          console.log({ type: 'ended', videoEnded: ++videoEnded });
-          if (videoEnded === 2) {
-            resolve();
-          }
-        });
+        const medias = Array.from(document.querySelectorAll<HTMLMediaElement>('video, audio'));
+        medias.forEach(media => {
+          media.addEventListener('ended', () => {
+            if (videoEnded++ === 0) {
+              console.log({ type: 'intro' });
+            } else {
+              resolve();
+            }
+          });
+          media.addEventListener('timeupdate', e => {
+            console.log({ type: 'timeupdate', currentTime: media.currentTime });
+          });
+        })
       })
     }),
     // 혹시 모르니 시간만큼 대기 타기

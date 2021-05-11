@@ -11,12 +11,12 @@ export default async function getCourseUncompleteLectures (context: BrowserConte
     return $('.user_progress_table tbody tr').toArray().map(element => {
       const $element = $(element);
       const $title = $element.find('.text-left');
-      if ($title.next().next().next().text() === 'X') {
+      // if ($title.next().next().next().text() === 'X') {
         return {
           title: $title.text().trim()
         };
-      }
-      return null;
+      // }
+      // return null;
     }).filter((v): v is NonNullable<typeof v> => Boolean(v));
   });
 }
