@@ -18,7 +18,7 @@ prompt.start();
 
 async function main () {
   console.log('🚀 온라인 강의 자동 이어듣기 시작!\n');
-  const browser = await playwright.webkit.launch({
+  const browser = await playwright.firefox.launch({
     headless: !!process.env.PLAY_BACKGROUND
   });
   const context = await browser.newContext({
@@ -71,7 +71,7 @@ async function main () {
 
     consoleRewrite(`👀 총 ${lectures.length}개의 미수강 현재 주차 강의가 있습니다.`);
     if (lectures.length) {
-      console.log('\n\n');
+      console.log('\n');
 
       const mainProgress = new MultiBar({
         format: `{emoji} {index}. | {bar} | {course} > {lecture} | {status}`,

@@ -2,7 +2,7 @@ import { BrowserContext } from 'playwright';
 
 type Props = {
   lectureId: string;
-  onConsole?(event: { type: string; }): void;
+  onConsole?(event: { type: string; } & Record<string, unknown>): void;
 };
 
 export default async function viewVideo (context: BrowserContext, props: Props) {
@@ -16,10 +16,12 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
   await secondFrame.waitForLoadState('load');
   await secondFrame.waitForSelector('.vc-front-screen-play-btn');
   await secondFrame.click('.vc-front-screen-play-btn');
-  const muteButton = (await secondFrame.$('#play-controller .vc-pctrl-volume-btn:not(.muted)'));
-  if (muteButton) {
-    await muteButton.click();
-  }
+  try {
+    const muteButton = (await secondFrame.$('#play-controller .vc-pctrl-volume-btn:not(.muted)'));
+    if (muteButton) {
+      await muteButton.click();
+    }
+  } catch {}
   newPage.on('dialog', async (dialog) => {
     await dialog.accept();
   });
@@ -33,12 +35,13 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
       } catch {}
     }
   });
+  await newPage.exposeFunction('onConsole', onConsole);
   await secondFrame.evaluate(() => {
     return new Promise<void>(resolve => {
       try {
         // Check intro is pass from playProgress should move
         const introMutation = new MutationObserver(() => {
-          console.log({ type: 'intro' });
+          onConsole?.({ type: 'intro' });
           introMutation.disconnect();
         });
         introMutation.observe(document.querySelector('.vc-pctrl-play-progress'), {
@@ -53,7 +56,7 @@ export default async function viewVideo (context: BrowserContext, props: Props) 
             return result + (value * Math.pow(60, index));
           }, 0);
           if (prevCurrentTime !== currentTime) {
-            console.log({
+            onConsole?.({
               type: 'timeupdate',
               currentTime: currentTime
             });
