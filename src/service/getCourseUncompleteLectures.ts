@@ -4,7 +4,7 @@ type Props = {
   courseId: string;
 };
 
-const DEBUGGING_MODE = true;
+const DEBUGGING_MODE = false;
 
 export default async function getCourseUncompleteLectures (context: Parameters<typeof playwrightCheerio>[0], props: Props) {
   const { courseId } = props;
