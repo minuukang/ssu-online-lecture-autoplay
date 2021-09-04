@@ -16,7 +16,7 @@ export default async function bootstrap () {
   console.log('🚀 온라인 강의 자동 이어듣기 시작!\n');
 
   const browser = await playwright.firefox.launch({
-    headless: !!process.env.PLAY_BACKGROUND
+    headless: !!(process.env.PLAY_BACKGROUND && process.env.PLAY_BACKGROUND !== '0')
   });
 
   const context = await browser.newContext({
@@ -29,8 +29,8 @@ export default async function bootstrap () {
   try {
     // authencaition
     let input = {
-      id: process.env.SSU_ID,
-      password: process.env.SSU_PASSWORD
+      id: process.env.SSU_ID as string,
+      password: process.env.SSU_PASSWORD as string,
     };
 
     if (!(input.id && input.password)) {
@@ -38,7 +38,7 @@ export default async function bootstrap () {
       prompt.start();
       input = await prompt.get([
         { properties: { id: { message: 'http://myclass.ssu.ac.kr ID' } } },
-        { properties: { password: { message: 'http://myclass.ssu.ac.kr Password', hidden: true } as unknown } }
+        { properties: { password: { message: 'http://myclass.ssu.ac.kr Password', hidden: true } as never } }
       ]);
     }
 
@@ -74,9 +74,10 @@ export default async function bootstrap () {
         });
   
         let playReady = false;
+        `https://canvas.ssu.ac.kr/learningx/coursebuilder/course/${component.courseId}/learn/60858/unit/268399/view?user_id=11854&user_login=20180406&user_name=%EA%B0%95%EB%AF%BC%EC%9A%B0(20%23%23%23%2306)&user_email=minukang5874%40gmail.com&role=1&is_observer=false&locale=ko&mode=default`
         await play(context, {
           url: component.view_info.view_url,
-          onConsole(event: { type: 'intro' } | { type: 'timeupdate'; currentTime: number; }) {
+          onConsole(event: { type: 'intro' | 'end' } | { type: 'timeupdate'; currentTime: number; }) {
             if (event.type === 'intro') {
               playReady = true;
               progress.update(0, {
@@ -84,8 +85,15 @@ export default async function bootstrap () {
                 status: progressTimeFormat(0, totalTime)
               });
             } else if (event.type === 'timeupdate' && playReady) {
+              const second = Math.floor(event.currentTime);
               progress.update(event.currentTime, {
+                emoji: second % 2 ? '🏃‍' : '🚶',
                 status: progressTimeFormat(Math.floor(event.currentTime), totalTime),
+              });
+            } else if (event.type === 'end') {
+              progress.update(totalTime, {
+                emoji: '⌛',
+                status: 'Finishing...'
               });
             }
           }

@@ -22,6 +22,6 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     // typescript options here
-    "lib": ["DOM"]
+    "lib": ["DOM", "es2019"]
   }
 }

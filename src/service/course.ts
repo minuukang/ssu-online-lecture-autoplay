@@ -22,6 +22,7 @@ export async function getUnCompletedCourseComponents (me: Authorization) {
       return courseComponents.map(component => ({
         ...component,
         courseName: course.name,
+        courseId: course.id
       }));
     })
   )).flat();

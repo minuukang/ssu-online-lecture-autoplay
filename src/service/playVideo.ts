@@ -31,65 +31,86 @@ export async function play (context: BrowserContext, props: Props) {
     }
   });
   onConsole && await page.exposeFunction('onConsole', onConsole);
-  await secondFrame.evaluate(() => {
-    return new Promise<void>(resolve => {
-      try {
-        function progressStart () {
-          // Check currentTime from seek thumb style mutation
-          let prevCurrentTime = 0;
-          const currentTimeEl = document.querySelector('.vc-pctrl-curr-time')!;
-          const progressMutation = new MutationObserver(() => {
-            const currentTimeText = currentTimeEl.textContent!;
-            const currentTime = currentTimeText.split(':').map(Number).reverse().reduce((result, value, index) => {
-              return result + (value * Math.pow(60, index));
-            }, 0);
-            if (prevCurrentTime !== currentTime) {
-              onConsole?.({
-                type: 'timeupdate',
-                currentTime: currentTime
+  while (1) {
+    try {
+      await secondFrame.evaluate(() => {
+        return new Promise<void>((resolve, reject) => {
+            function progressStart () {
+              // Check currentTime from seek thumb style mutation
+              let prevCurrentTime = 0;
+              const currentTimeEl = document.querySelector('.vc-pctrl-curr-time')!;
+              const progressMutation = new MutationObserver(() => {
+                const currentTimeText = currentTimeEl.textContent!;
+                const currentTime = currentTimeText.split(':').map(Number).reverse().reduce((result, value, index) => {
+                  return result + (value * Math.pow(60, index));
+                }, 0);
+                if (prevCurrentTime !== currentTime) {
+                  onConsole?.({
+                    type: 'timeupdate',
+                    currentTime: currentTime
+                  });
+                }
+                prevCurrentTime = currentTime;
+              });
+              progressMutation.observe(document.querySelector('.vc-pctrl-seek-thumb')!, {
+                attributes: true
               });
             }
-            prevCurrentTime = currentTime;
-          });
-          progressMutation.observe(document.querySelector('.vc-pctrl-seek-thumb')!, {
-            attributes: true
-          });
-        }
-
-        // Check intro is pass from playProgress should move
-        const introMutation = new MutationObserver(() => {
-          onConsole?.({ type: 'intro' });
-          introMutation.disconnect();
-          progressStart();
+    
+            // Check intro is pass from playProgress should move
+            const introMutation = new MutationObserver(() => {
+              onConsole?.({ type: 'intro' });
+              introMutation.disconnect();
+              progressStart();
+            });
+            introMutation.observe(document.querySelector('.vc-pctrl-play-progress')!, {
+              attributes: true
+            });
+           
+            // Check resolve from retry screen is opened
+            const retryContainer = document.querySelector('#player-center-control') as HTMLDivElement;
+            const retryMutation = new MutationObserver(() => {
+              if (retryContainer.style.display && retryContainer.style.display !== 'none') {
+                resolve();
+              }
+            });
+            retryMutation.observe(retryContainer, {
+              attributes: true
+            });
+            
+            // Check confirm dialog if opened
+            const confirmDialog = document.querySelector('#confirm-dialog') as HTMLDivElement;
+            const confirmMutation = new MutationObserver(() => {
+              if (confirmDialog.style.display && confirmDialog.style.display !== 'none') {
+                (confirmDialog.querySelector('.confirm-ok-btn') as HTMLDivElement).click();
+              }
+            });
+            confirmMutation.observe(confirmDialog, {
+              attributes: true
+            });
+    
+            // Check duplicate dialog if opened
+            const duplicateDialog = document.querySelector('#warn-duplicate-contents-msg') as HTMLDivElement;
+            const duplicateMutation = new MutationObserver(() => {
+              if (confirmDialog.style.display && confirmDialog.style.display !== 'none') {
+                location.reload();
+                reject(new Error('reload'));
+              }
+            });
+            duplicateMutation.observe(duplicateDialog, {
+              attributes: true
+            });
         });
-        introMutation.observe(document.querySelector('.vc-pctrl-play-progress')!, {
-          attributes: true
-        });
-       
-        // Check resolve from retry screen is opened
-        const retryContainer = document.querySelector('#player-center-control') as HTMLDivElement;
-        const retryMutation = new MutationObserver(() => {
-          if (retryContainer.style.display && retryContainer.style.display !== 'none') {
-            resolve();
-          }
-        });
-        retryMutation.observe(retryContainer, {
-          attributes: true
-        });
-        
-        // Check confirm dialog if opened
-        const confirmDialog = document.querySelector('#confirm-dialog') as HTMLDivElement;
-        const confirmMutation = new MutationObserver(() => {
-          if (confirmDialog.style.display && confirmDialog.style.display !== 'none') {
-            (confirmDialog.querySelector('.confirm-ok-btn') as HTMLDivElement).click();
-          }
-        });
-        confirmMutation.observe(confirmDialog, {
-          attributes: true
-        });
-      } catch (err) {}
-    });
+      });
+    } catch (err) {
+      if (!(err instanceof Error && err.message === 'reload')) {
+        throw err;
+      }
+    }
+  }
+  onConsole?.({
+    type: 'end'
   });
-  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(5000);
   await page.close();
 }
