@@ -71,7 +71,12 @@ export async function play (context: BrowserContext, props: Props) {
             const retryContainer = document.querySelector('#player-center-control') as HTMLDivElement;
             const retryMutation = new MutationObserver(() => {
               if (retryContainer.style.display && retryContainer.style.display !== 'none') {
-                resolve();
+                onConsole?.({
+                  type: 'end'
+                });
+                window.setTimeout(() => {
+                  resolve();
+                }, 5000);
               }
             });
             retryMutation.observe(retryContainer, {
@@ -102,15 +107,12 @@ export async function play (context: BrowserContext, props: Props) {
             });
         });
       });
+      break;
     } catch (err) {
       if (!(err instanceof Error && err.message === 'reload')) {
         throw err;
       }
     }
   }
-  onConsole?.({
-    type: 'end'
-  });
-  await page.waitForTimeout(5000);
   await page.close();
 }
