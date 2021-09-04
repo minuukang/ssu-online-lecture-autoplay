@@ -3,7 +3,7 @@ import prompt from 'prompt';
 import alert from 'alert';
 import playwright from 'playwright';
 
-import { login, authorization } from './service/auth';
+import { authorization } from './service/auth';
 import { getUnCompletedCourseComponents } from './service/course';
 import { play } from './service/playVideo';
 import { compomentProgress } from './helpers/progress';
@@ -44,11 +44,10 @@ export default async function bootstrap () {
 
     consoleRewrite('⏳ 로그인 중입니다 ...');
 
-    await login(context, input);
+    const me = await authorization(context, input);
 
     consoleRewrite('⏳ 강의 정보를 불러오는 중입니다 ...');
 
-    const me = await authorization(context, { id: input.id });
     const uncompletedComponents = await getUnCompletedCourseComponents(me);
 
     consoleRewrite(`👀 총 ${uncompletedComponents.length}개의 미수강 현재 주차 강의가 있습니다.`);
@@ -105,13 +104,18 @@ export default async function bootstrap () {
         });
         progress.stop();
       }
+      mainProgress.stop();
     }
     console.log(`\n✋ 다음에 또 봐요!`);
   } catch (e) {
-    alert(e.message);
+    console.error(e);
+    if (e instanceof Error) {
+      alert(e.message);
+    }
   } finally {
     await context.close();
     await browser.close();
+    process.exit(0);
   }
 }
 
