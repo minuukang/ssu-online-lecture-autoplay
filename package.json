@@ -19,15 +19,18 @@
     "@types/cookie": "^0.4.1",
     "@types/node-fetch": "^2.5.12",
     "@types/prompt": "^1.1.0",
+    "@types/winston": "^2.4.4",
     "alert": "^5.0.10",
     "cheerio": "^1.0.0-rc.6",
     "cli-progress": "^3.9.0",
     "cookie": "^0.4.1",
+    "dayjs": "^1.10.6",
     "dotenv": "^9.0.0",
     "node-fetch": "^2.6.1",
     "playwright": "^1.14.1",
     "prompt": "^1.1.0",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.2",
+    "winston": "^3.3.3"
   }
 }

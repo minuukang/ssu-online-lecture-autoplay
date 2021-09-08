@@ -1,6 +1,7 @@
 import * as accountApi from '../api/accounts';
 import * as userApi from '../api/users';
 import * as coursesApi from '../api/courses';
+import { logger } from '../helpers/log';
 
 import { Authorization } from "./auth";
 
@@ -12,6 +13,7 @@ export async function getUnCompletedCourseComponents (me: Authorization) {
     token: me.token,
     term_id: defaultTerm.id,
   });
+  logger.info({ activities });
   const onlineCourses = activities.map(({ course }) => course).filter(course => course.course_format !== 'none')
   const components = (await Promise.all(
     onlineCourses.map(async course => {
@@ -19,11 +21,13 @@ export async function getUnCompletedCourseComponents (me: Authorization) {
         ...me,
         courseId: course.id
       });
-      return courseComponents.map(component => ({
+      const courseComponentsWithCategory = courseComponents.map(component => ({
         ...component,
         courseName: course.name,
         courseId: course.id
       }));
+      logger.info({ courseComponentsWithCategory });
+      return courseComponentsWithCategory;
     })
   )).flat();
 
