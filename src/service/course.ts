@@ -14,24 +14,38 @@ export async function getUnCompletedCourseComponents (me: Authorization) {
     term_id: defaultTerm.id,
   });
   logger.info({ activities });
+
+  const now = new Date();
+
   const onlineCourses = activities.map(({ course }) => course).filter(course => course.course_format !== 'none')
   const components = (await Promise.all(
     onlineCourses.map(async course => {
-      const courseComponents = await coursesApi.components({
-        ...me,
-        courseId: course.id
-      });
-      const courseComponentsWithCategory = courseComponents.map(component => ({
-        ...component,
-        courseName: course.name,
-        courseId: course.id
-      }));
-      logger.info({ courseComponentsWithCategory });
+      const [courseComponents, courseSections] = await Promise.all([
+        coursesApi.components({ ...me, courseId: course.id }),
+        coursesApi.sections({ ...me, courseId: course.id }),
+      ]);
+      const activeComponentIds = courseSections
+        .filter(section => now > new Date(section.unlock_at) && now < new Date(section.late_at))
+        .map(section => {
+          return section.subsections.map(subsection => {
+            return subsection.units.map(unit => {
+              return unit.components.map(component => component.component_id);
+            }).flat();
+          }).flat();
+        })
+        .flat();
+      const courseComponentsWithCategory = courseComponents
+        .filter(component => activeComponentIds.includes(component.component_id))
+        .map(component => ({
+          ...component,
+          courseName: course.name,
+          courseId: course.id
+        }));
+      logger.info({ courseComponents, courseSections });
       return courseComponentsWithCategory;
     })
   )).flat();
-
-  const now = new Date();
+  
   const activeComponents = components.filter(component => {
     return component.use_attendance && new Date(component.unlock_at) < now && now < new Date(component.due_at);
   });

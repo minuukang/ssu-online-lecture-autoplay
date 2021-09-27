@@ -74,35 +74,43 @@ export default async function bootstrap () {
   
         let playReady = false;
         `https://canvas.ssu.ac.kr/learningx/coursebuilder/course/${component.courseId}/learn/60858/unit/268399/view?user_id=11854&user_login=20180406&user_name=%EA%B0%95%EB%AF%BC%EC%9A%B0(20%23%23%23%2306)&user_email=minukang5874%40gmail.com&role=1&is_observer=false&locale=ko&mode=default`
-        await play(context, {
-          url: component.view_info.view_url,
-          onConsole(event: { type: 'intro' | 'end' } | { type: 'timeupdate'; currentTime: number; }) {
-            if (event.type === 'intro') {
-              playReady = true;
-              progress.update(0, {
-                emoji: '🏃‍',
-                status: progressTimeFormat(0, totalTime)
-              });
-            } else if (event.type === 'timeupdate' && playReady) {
-              const second = Math.floor(event.currentTime);
-              progress.update(event.currentTime, {
-                emoji: second % 2 ? '🏃‍' : '🚶',
-                status: progressTimeFormat(Math.floor(event.currentTime), totalTime),
-              });
-            } else if (event.type === 'end') {
-              progress.update(totalTime, {
-                emoji: '⌛',
-                status: 'Finishing...'
-              });
+        try {
+          await play(context, {
+            url: component.view_info.view_url,
+            onConsole(event: { type: 'intro' | 'end' } | { type: 'timeupdate'; currentTime: number; }) {
+              if (event.type === 'intro') {
+                playReady = true;
+                progress.update(0, {
+                  emoji: '🏃‍',
+                  status: progressTimeFormat(0, totalTime)
+                });
+              } else if (event.type === 'timeupdate' && playReady) {
+                const second = Math.floor(event.currentTime);
+                progress.update(event.currentTime, {
+                  emoji: second % 2 ? '🏃‍' : '🚶',
+                  status: progressTimeFormat(Math.floor(event.currentTime), totalTime),
+                });
+              } else if (event.type === 'end') {
+                progress.update(totalTime, {
+                  emoji: '⌛',
+                  status: 'Finishing...'
+                });
+              }
             }
-          }
-        });
-  
-        progress.update(totalTime, {
-          emoji: '✅',
-          status: progressTimeFormat(totalTime, totalTime),
-        });
-        progress.stop();
+          });
+
+          progress.update(totalTime, {
+            emoji: '✅',
+            status: progressTimeFormat(totalTime, totalTime),
+          });
+        } catch (err) {
+          progress.update(totalTime, {
+            emoji: '❌',
+            status: err instanceof Error ? err.message : String(err),
+          });
+        } finally {
+          progress.stop();
+        }
       }
       mainProgress.stop();
     }

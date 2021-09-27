@@ -41,7 +41,42 @@ export type Component = {
   };
 };
 
+export type Section = {
+  due_at: string;
+  has_component: boolean;
+  is_master_course_child_content: boolean;
+  late_at: string;
+  lock_at: null | string;
+  position: number;
+  published: null | string;
+  section_id: number;
+  subsections: {
+    is_master_course_child_content: boolean;
+    position: number;
+    subsection_id: number;
+    title: string;
+    units: {
+      components: {
+        component_id: number;
+        position: number;
+        published: string | null;
+        title: string;
+      }[];
+      position: number;
+      title: string;
+      unit_id: number;
+    }[];
+  }[];
+  title: string;
+  unlock_at: string;
+};
+
 export function components (props: { user_id: string; user_login: string; role: string; token: string, courseId: number; }) {
   const { user_id, user_login, role, token, courseId } = props;
   return api<Component[]>(`/courses/${courseId}/allcomponents_db?user_id=${user_id}&user_login=${user_login}&role=${role}`, token);
+}
+
+export function sections (props: { user_id: string; user_login: string; role: string; token: string, courseId: number; }) {
+  const { user_id, user_login, role, token, courseId } = props;
+  return api<Section[]>(`/courses/${courseId}/sections_db?user_id=${user_id}&user_login=${user_login}&role=${role}`, token);
 }
