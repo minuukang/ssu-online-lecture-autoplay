@@ -5,7 +5,7 @@ import { logger } from '../helpers/log';
 
 import { Authorization } from "./auth";
 
-export async function getUnCompletedCourseComponents (me: Authorization) {
+export async function getUnCompletedCourseComponents (me: Authorization, ignoreCourseIds?: number[]) {
   const terms = await accountApi.terms(me.token);
   const defaultTerm = terms.enrollment_terms.find(term => term.default) || terms.enrollment_terms[terms.enrollment_terms.length - 1];
   const { activities } = await userApi.learnActivities({
@@ -17,7 +17,11 @@ export async function getUnCompletedCourseComponents (me: Authorization) {
 
   const now = new Date();
 
-  const onlineCourses = activities.map(({ course }) => course).filter(course => course.course_format !== 'none')
+  console.log(activities, ignoreCourseIds);
+
+  const onlineCourses = activities
+    .map(({ course }) => course)
+    .filter(course => course.course_format !== 'none' && !ignoreCourseIds?.includes(course.id))
   const components = (await Promise.all(
     onlineCourses.map(async course => {
       const [courseComponents, courseSections] = await Promise.all([

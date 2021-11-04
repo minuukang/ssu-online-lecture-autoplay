@@ -33,6 +33,8 @@ export default async function bootstrap () {
       password: process.env.SSU_PASSWORD as string,
     };
 
+    const ignoreCourseIds = process.env.IGNORE_COURSE_IDS?.split(',').map(Number) || [];
+
     if (!(input.id && input.password)) {
       console.log('📝 로그인 정보를 입력하세요.');
       prompt.start();
@@ -48,7 +50,7 @@ export default async function bootstrap () {
 
     consoleRewrite('⏳ 강의 정보를 불러오는 중입니다 ...');
 
-    const uncompletedComponents = await getUnCompletedCourseComponents(me);
+    const uncompletedComponents = await getUnCompletedCourseComponents(me, ignoreCourseIds);
 
     consoleRewrite(`👀 총 ${uncompletedComponents.length}개의 미수강 현재 주차 강의가 있습니다.`);
 

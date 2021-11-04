@@ -18,3 +18,7 @@ npm start
 매번 아이디 비밀번호 치는게 귀찮다면 `.env.example` 파일을 `.env` 로 복사해서 `SSU_ID` 와 `SSU_PASSWORD` 필드를 채워넣으세요
 
 (있을지 모르겠지만!) 동영상 재생을 백그라운드에서 하고 싶다면 `.env` 에서 `PLAY_BACKGROUND` 옵션을 채워놓으세요. 브라우저를 headless로 전환합니다.
+
+## 듣고싶지 않은 강의 (F를 원하는 강의)가 있을 경우?
+
+`.env` 에 `IGNORE_COURSE_IDS` 에 id값을 "," 로 구분지어 채워 놓습니다. id값은 스마트캠퍼스에서 해당 강의의 url인 "https://canvas.ssu.ac.kr/courses/7819" 에서 "7819" 에 해당하는 부분입니다.
