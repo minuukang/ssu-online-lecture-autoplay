@@ -17,8 +17,6 @@ export async function getUnCompletedCourseComponents (me: Authorization, ignoreC
 
   const now = new Date();
 
-  console.log(activities, ignoreCourseIds);
-
   const onlineCourses = activities
     .map(({ course }) => course)
     .filter(course => course.course_format !== 'none' && !ignoreCourseIds?.includes(course.id))
