@@ -11,5 +11,5 @@ type Activitie = {
 };
 
 export function learnActivities ({ userId, token, term_id }: { userId: string, token: string, term_id: number }) {
-  return api<{ total_count: number; activities: Activitie[] }>(`/users/${userId}/learn_activities?term_id=${term_id}`, token);
+  return api<{ total_count: number; activities: Activitie[] }>(`/users/${userId}/learn_activities?term_ids=${term_id}`, token);
 }

@@ -6,14 +6,13 @@ import { logger } from '../helpers/log';
 import { Authorization } from "./auth";
 
 export async function getUnCompletedCourseComponents (me: Authorization, ignoreCourseIds?: number[]) {
-  const terms = await accountApi.terms(me.token);
+  const terms = await accountApi.terms(me.user_id, me.token);
   const defaultTerm = terms.enrollment_terms.find(term => term.default) || terms.enrollment_terms[terms.enrollment_terms.length - 1];
   const { activities } = await userApi.learnActivities({
     userId: me.user_login,
     token: me.token,
     term_id: defaultTerm.id,
   });
-  logger.info({ activities });
 
   const now = new Date();
 
