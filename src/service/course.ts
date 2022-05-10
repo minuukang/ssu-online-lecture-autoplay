@@ -21,29 +21,12 @@ export async function getUnCompletedCourseComponents (me: Authorization, ignoreC
     .filter(course => course.course_format !== 'none' && !ignoreCourseIds?.includes(course.id))
   const components = (await Promise.all(
     onlineCourses.map(async course => {
-      const [courseComponents, courseSections] = await Promise.all([
-        coursesApi.components({ ...me, courseId: course.id }),
-        coursesApi.sections({ ...me, courseId: course.id }),
-      ]);
-      const activeComponentIds = courseSections
-        .filter(section => now > new Date(section.unlock_at) && now < new Date(section.late_at))
-        .map(section => {
-          return section.subsections.map(subsection => {
-            return subsection.units.map(unit => {
-              return unit.components.map(component => component.component_id);
-            }).flat();
-          }).flat();
-        })
-        .flat();
-      const courseComponentsWithCategory = courseComponents
-        .filter(component => activeComponentIds.includes(component.component_id))
-        .map(component => ({
-          ...component,
-          courseName: course.name,
-          courseId: course.id
-        }));
-      logger.info({ courseComponents, courseSections });
-      return courseComponentsWithCategory;
+      const courseComponents = await coursesApi.components({ ...me, courseId: course.id });
+      return courseComponents.map(component => ({
+        ...component,
+        courseName: course.name,
+        courseId: course.id
+      }))
     })
   )).flat();
   
