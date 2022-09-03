@@ -3,7 +3,7 @@ import { api } from './base';
 export type Component = {
   assignment_id: number;
   attendance_status: 'attendance' | 'none';
-  commons_content: {
+  commons_content?: {
     content_id: string;
     content_type: string;
     duration: number;
