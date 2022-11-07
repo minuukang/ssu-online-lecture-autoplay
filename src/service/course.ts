@@ -1,7 +1,6 @@
 import * as accountApi from "../api/accounts";
 import * as userApi from "../api/users";
 import * as coursesApi from "../api/courses";
-import { logger } from "../helpers/log";
 
 import { Authorization } from "./auth";
 
@@ -13,20 +12,17 @@ export async function getUnCompletedCourseComponents(
   const defaultTerm =
     terms.enrollment_terms.find((term) => term.default) ||
     terms.enrollment_terms[terms.enrollment_terms.length - 1];
-  const { activities } = await userApi.learnActivities({
-    userId: me.user_login,
+  const courses = await userApi.learnActivities({
     token: me.token,
     term_id: defaultTerm.id,
   });
 
   const now = new Date();
 
-  const onlineCourses = activities
-    .map(({ course }) => course)
-    .filter(
-      (course) =>
-        course.course_format !== "none" && !ignoreCourseIds?.includes(course.id)
-    );
+  const onlineCourses = courses.filter(
+    (course) =>
+      course.course_format !== "none" && !ignoreCourseIds?.includes(course.id)
+  );
   const components = (
     await Promise.all(
       onlineCourses.map(async (course) => {
